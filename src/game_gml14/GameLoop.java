@@ -32,7 +32,7 @@ public class GameLoop {
 		public void handle(ActionEvent evt) {
 			timer++;
 			updateSprites();
-			if (list.size()<=10 && timer%120==0)
+			if (list.size()<=10 && timer%30==0)
 				randomMeteor(true);
 			
 			
@@ -84,7 +84,7 @@ public class GameLoop {
 			newMeteor.setFill(Color.BLUE);
 			newMeteor.setCenterX(scene.getWidth()+30);
 			newMeteor.setCenterY(Math.random()*500);
-			newMeteor.setRadius(20.0);
+			newMeteor.setRadius(Math.random()*80);
 			root.getChildren().add(newMeteor);
 			list.add(newMeteor);
 		}
@@ -94,9 +94,9 @@ public class GameLoop {
 			list.get(i).setCenterX(list.get(i).getCenterX()-5);
 		}
 		for (int i = 0; i<list.size(); i++) {
-			if (list.get(i).getCenterX() <= 0) {
-				list.remove(list.get(i));
+			if (list.get(i).getCenterX() <= -90) {
 				root.getChildren().remove(list.get(i));
+				list.remove(list.get(i));
 			}
 		}
 	}
