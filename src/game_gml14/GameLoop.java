@@ -34,8 +34,6 @@ public class GameLoop {
 			updateSprites();
 			if (list.size()<=10 && timer%30==0)
 				randomMeteor(true);
-			
-			
 		}
 	};
 
@@ -44,29 +42,14 @@ public class GameLoop {
 	 * Create the game's scene
 	 */
 	public Scene init (Stage s, int width, int height) {
-		// Create a scene graph to organize the scene
 		list = new ArrayList<Circle>();
 		root = new Group();
-		// Create a place to see the shapes
 		scene = new Scene(root, width, height, Color.WHITE);
 		timer = 0;
-		// Make some shapes and set their properties
-       /// Image image = new Image(getClass().getResourceAsStream("images/duke.gif"));
-       // imageView = new ImageView();
-       // imageView.setImage(image);
-	//	myBall = new Circle(scene.getWidth() / 2, scene.getHeight() / 2, 60);
-		//myBall.setFill(Color.RED);
-		
-		// remember shapes for viewing later
-		//root.getChildren().add(myBall);
-		//root.getChildren().add(imageView);
-		/*newMeteor = new Meteor();
-		newMeteor.setFill(Color.BROWN);
-		newMeteor.setCenterX(scene.getWidth());
-		newMeteor.setCenterY(scene.getHeight()/2);
-		newMeteor.setRadius(30);
-		root.getChildren().add(newMeteor);*/
+		myShip = new PlayerShip();
+		root.getChildren().add(myShip);
 		return scene;
+
 	}
 
 	/**
@@ -79,15 +62,10 @@ public class GameLoop {
 	//create random meteors
 	//boolean isBig refers to meteor type: big or small
 	private void randomMeteor(boolean isBig) {
-		if (isBig) {
-			Circle newMeteor = new Circle();
-			newMeteor.setFill(Color.BLUE);
-			newMeteor.setCenterX(scene.getWidth()+30);
-			newMeteor.setCenterY(Math.random()*500);
-			newMeteor.setRadius(Math.random()*80);
-			root.getChildren().add(newMeteor);
-			list.add(newMeteor);
-		}
+		Meteor newMeteor = new Meteor(isBig);
+		root.getChildren().add(newMeteor);
+		list.add(newMeteor);
+			
 	}
 	private void updateSprites () {
 		for (int i = 0; i<list.size(); i++) {
