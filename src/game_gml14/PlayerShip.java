@@ -6,11 +6,11 @@ import javafx.scene.shape.Rectangle;
 public class PlayerShip extends Rectangle{
 
 	public PlayerShip(){
-		super.setX(30);
-		super.setY(250);
-		super.setHeight(30);
-		super.setWidth(30);
-		super.setFill(Color.RED);
+		this.setX(30);
+		this.setY(250);
+		this.setHeight(30);
+		this.setWidth(30);
+		this.setFill(Color.RED);
 	}
 	
 }

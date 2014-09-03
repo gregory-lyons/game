@@ -16,13 +16,13 @@ public class Meteor extends Circle {
 		if (isBig){
 
 			this.setRadius(Math.random()*50+30);
-			this.setFill(Color.BLUE);
-			setSpeed(Math.random()*2);
+			this.setFill(Color.BROWN);
+			setSpeed(4);
 		}
 		else{
 			this.setRadius(Math.random()*40+20);
-			setSpeed(Math.random()*4);
-			this.setFill(Color.SIENNA);
+			setSpeed(7);
+			this.setFill(Color.BROWN);
 		}
 
 	}

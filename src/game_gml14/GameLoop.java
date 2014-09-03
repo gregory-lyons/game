@@ -11,6 +11,7 @@ import javafx.scene.input.KeyEvent;
 import javafx.scene.paint.Color;
 import javafx.scene.shape.Circle;
 import javafx.scene.shape.Rectangle;
+import javafx.scene.text.Font;
 import javafx.scene.text.Text;
 import javafx.stage.Stage;
 import javafx.util.Duration;
@@ -21,21 +22,27 @@ public class GameLoop {
 	private Group root;
 	private ArrayList<Meteor> meteors;
 	private ArrayList<Circle> bullets;
+	private ArrayList<AlienShip> aliens;
 	private Scene scene;
+	private Scene scene2;
 	private int timer;
 	private int score;
 	private ArrayList<Rectangle> ammo;
 	private Text scoreText;
+	private boolean paused;
+	private boolean newGame;
+	private boolean level2;
 
 
     private EventHandler<ActionEvent> oneFrame = new EventHandler<ActionEvent>() {
 		@Override
 		public void handle(ActionEvent evt) {
+			if (!newGame && !level2) {
 			timer++;
 			updateMeteors();
 			updateBullets();
 			if (meteors.size()<=10 && timer%30==0)
-				randomMeteor(true);
+				randomMeteor(false);
 	
 			if (timer%40==0) {
 				score++;
@@ -43,31 +50,84 @@ public class GameLoop {
 					root.getChildren().remove(scoreText);
 				}
 				scoreText = new Text(30,40, String.valueOf(score));
+				scoreText.setFill(Color.WHITE);
 				root.getChildren().add(scoreText);
 			}
 			checkShipCollisions();
 			checkBulletCollisions();
+			if (score >=10) {
+				level2 = true;
+				newGame = true;
+				startGame();
+			}
+			}
+			if (level2) {
+				timer++;
+				updateMeteors();
+				updateBullets();
+				if (meteors.size()<=10 && timer%30==0)
+					randomMeteor(true);
+		
+				if (timer%40==0) {
+					score++;
+					if (scoreText != null) {
+						root.getChildren().remove(scoreText);
+					}
+					scoreText = new Text(30,40, String.valueOf(score));
+					scoreText.setFill(Color.WHITE);
+					root.getChildren().add(scoreText);
+				}
+				checkShipCollisions();
+				checkBulletCollisions();
+			}
+		
 		}
 	};
 
 	public Scene init (Stage s, int width, int height) {
+		root = new Group();
+		scene = new Scene(root, width, height, Color.BLACK);
+		scene.addEventHandler(KeyEvent.KEY_PRESSED, new KeyPressedHandler(this));
+		/*Rectangle startGameBox = new Rectangle(150, 250, 500, 100);
+		startGameBox.setFill(Color.YELLOW);
+		root.getChildren().add(startGameBox);*/
+		Text title = new Text(160, 100, "VOYAGE TO VENUS");
+		title.setFont(Font.font("Arial Rounded MT Bold", 50));
+		title.setFill(Color.YELLOW);
+		root.getChildren().add(title);
+		Text line1 = new Text(120, 300, "You must navigate to Venus (LEVEL 1), acquire a sample, and return home");
+		line1.setFont(Font.font("Arial Rounded MT Bold", 12));
+		line1.setFill(Color.YELLOW);
+		root.getChildren().add(line1);
+		newGame = true;
+		level2 = false;
+		return scene;
+	}
+	
+	public void startGame() {
 		meteors = new ArrayList<Meteor>();
 		bullets = new ArrayList<Circle>();
 		ammo = new ArrayList<Rectangle>();
-		root = new Group();
-		scene = new Scene(root, width, height, Color.WHITE);
-		scene.addEventHandler(KeyEvent.KEY_PRESSED, new KeyPressedHandler(this));
-        scene.addEventHandler(KeyEvent.KEY_RELEASED, new KeyReleasedHandler(this));
+		aliens = new ArrayList<AlienShip>();
+		root.getChildren().clear();
+		//scene.addEventHandler(KeyEvent.KEY_PRESSED, new KeyPressedHandler(this));
+        //scene.addEventHandler(KeyEvent.KEY_RELEASED, new KeyReleasedHandler(this));
 		timer = 0;
+		//paused = false;
 		myShip = new PlayerShip();
 		root.getChildren().add(myShip);
 		resetAmmo();
-		return scene;
+		newGame = false;
+	}
+	
+	public void level2(int w, int h) {
+		
 	}
 
 	public KeyFrame start () {
 		return new KeyFrame(Duration.millis(1000/60), oneFrame);
 	}
+	
 	
 	//create random meteors
 	//boolean isBig refers to meteor type: big or small
@@ -82,7 +142,7 @@ public class GameLoop {
 			Rectangle last = ammo.get(ammo.size()-1);
 			root.getChildren().remove(last);
 			ammo.remove(last);
-			Circle newBullet = new Circle(myShip.getX()+30, myShip.getY()+15, 10, Color.BLACK);
+			Circle newBullet = new Circle(myShip.getX()+30, myShip.getY()+15, 10, Color.YELLOW);
 			bullets.add(newBullet);
 			root.getChildren().add(newBullet);
 		}
@@ -90,8 +150,8 @@ public class GameLoop {
 	
 	private void updateMeteors () {
 		for (Meteor m: meteors) {
-			m.setCenterX(m.getCenterX()-5);
-			if (m.getCenterX() <= -90) {
+			m.setCenterX(m.getCenterX()-m.getSpeed());
+			if (m.getCenterX() <= -90 || m.getRadius()<=5) {
 				root.getChildren().remove(m);
 				meteors.remove(m);
 				return;
@@ -124,6 +184,12 @@ public class GameLoop {
 		}
 	}
 	
+	private void updateAliens() {
+		for (AlienShip a : aliens) {
+			
+		}
+	}
+	
 	private void checkShipCollisions() {
 		for (Meteor m : meteors) {
 			double distance = Math.sqrt(
@@ -136,6 +202,7 @@ public class GameLoop {
 				root.getChildren().add(myShip);
 				timer = 0;
 				score = 0;
+				resetAmmo();
 				return;
 			}
 		}
@@ -164,11 +231,15 @@ public class GameLoop {
 	}
 	
 	public void resetAmmo() {
+		for (Rectangle r : ammo) {
+			root.getChildren().remove(r);
+		}
+		ammo.clear();
 		for (int i=0;i<5;i++) {
-			Rectangle r = new Rectangle(70+i*20, 30, 10, 20);
-			r.setFill(Color.BLACK);
-			ammo.add(r);
-			root.getChildren().add(r);
+			Rectangle newRect = new Rectangle(70+i*20, 30, 10, 20);
+			newRect.setFill(Color.YELLOW);
+			ammo.add(newRect);
+			root.getChildren().add(newRect);
 		}
 	}
 

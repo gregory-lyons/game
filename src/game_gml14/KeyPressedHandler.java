@@ -26,6 +26,10 @@ public class KeyPressedHandler implements EventHandler<KeyEvent> {
         	game.newBullet();
         }
         
+        if (keyEvent.getCode() == KeyCode.A) {
+        	game.startGame();
+        }
+        
         if (keyEvent.getCode() == KeyCode.R) {
         	game.resetAmmo();
         }
