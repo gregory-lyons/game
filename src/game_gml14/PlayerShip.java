@@ -9,7 +9,7 @@ public class PlayerShip extends Rectangle{
 		super.setX(30);
 		super.setY(250);
 		super.setHeight(30);
-		super.setWidth(50);
+		super.setWidth(30);
 		super.setFill(Color.RED);
 	}
 	

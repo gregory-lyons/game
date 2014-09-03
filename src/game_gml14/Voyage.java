@@ -1,10 +1,12 @@
 package game_gml14;
 
+
 import game_gml14.GameLoop;
 import javafx.animation.KeyFrame;
 import javafx.animation.Timeline;
 import javafx.application.Application;
 import javafx.scene.Scene;
+import javafx.scene.input.KeyEvent;
 import javafx.stage.Stage;
 
 public class Voyage extends Application {
@@ -20,7 +22,7 @@ public class Voyage extends Application {
 		Scene scene = myGame.init(s, 800, 500);
 		s.setScene(scene);
 		s.show();
-		
+
 		// sets the game's loop 
 		KeyFrame frame = myGame.start();
 		Timeline animation = new Timeline();
