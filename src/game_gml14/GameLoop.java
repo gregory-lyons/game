@@ -23,6 +23,7 @@ public class GameLoop {
 	private ArrayList<Meteor> meteors;
 	private ArrayList<Circle> bullets;
 	private ArrayList<AlienShip> aliens;
+	private ArrayList<Circle> alienBullets;
 	private Scene scene;
 	private Scene scene2;
 	private int timer;
@@ -41,8 +42,14 @@ public class GameLoop {
 			timer++;
 			updateMeteors();
 			updateBullets();
-			if (meteors.size()<=10 && timer%30==0)
-				randomMeteor(false);
+			updateAliens();
+			updateAlienBullets();
+			//if (meteors.size()<=10 && timer%30==0)
+			//	randomMeteor(false);
+			
+			if (timer%400==0) {
+				newAlienShip();
+			}
 	
 			if (timer%40==0) {
 				score++;
@@ -55,16 +62,17 @@ public class GameLoop {
 			}
 			checkShipCollisions();
 			checkBulletCollisions();
-			if (score >=10) {
+			/*if (score >=100) {
 				level2 = true;
 				newGame = true;
 				startGame();
-			}
+			}*/
 			}
 			if (level2) {
 				timer++;
 				updateMeteors();
 				updateBullets();
+				updateAliens();
 				if (meteors.size()<=10 && timer%30==0)
 					randomMeteor(true);
 		
@@ -109,6 +117,7 @@ public class GameLoop {
 		bullets = new ArrayList<Circle>();
 		ammo = new ArrayList<Rectangle>();
 		aliens = new ArrayList<AlienShip>();
+		alienBullets = new ArrayList<Circle>();
 		root.getChildren().clear();
 		//scene.addEventHandler(KeyEvent.KEY_PRESSED, new KeyPressedHandler(this));
         //scene.addEventHandler(KeyEvent.KEY_RELEASED, new KeyReleasedHandler(this));
@@ -137,6 +146,12 @@ public class GameLoop {
 		meteors.add(newMeteor);
 	}
 	
+	private void newAlienShip(){
+		AlienShip newAlien = new AlienShip();
+		root.getChildren().add(newAlien);
+		aliens.add(newAlien);
+	}
+	
 	public void newBullet() {
 		if (ammo.size()>0) {
 			Rectangle last = ammo.get(ammo.size()-1);
@@ -146,6 +161,12 @@ public class GameLoop {
 			bullets.add(newBullet);
 			root.getChildren().add(newBullet);
 		}
+	}
+	
+	public void newAlienBullet(AlienShip a){
+		Circle alienBullet = new Circle(a.getX()+30, a.getY()+30, 5, Color.ORANGE);
+		root.getChildren().add(alienBullet);
+		alienBullets.add(alienBullet);
 	}
 	
 	private void updateMeteors () {
@@ -176,7 +197,7 @@ public class GameLoop {
 	private void updateBullets() {
 		for (Circle b : bullets) {
 			b.setCenterX(b.getCenterX()+10);
-			if (b.getCenterX() <= -90) {
+			if (b.getCenterX() >= 800) {
 				root.getChildren().remove(b);
 				bullets.remove(b);
 				return;
@@ -184,9 +205,34 @@ public class GameLoop {
 		}
 	}
 	
+	private void updateAlienBullets() {
+		for (AlienShip a : aliens) {
+			if (timer%50 == 0) newAlienBullet(a);
+		}
+		for (Circle b : alienBullets) {
+			b.setCenterX(b.getCenterX()-3);
+			if (b.getCenterX() <= -15) {
+				root.getChildren().remove(b);
+				alienBullets.remove(b);
+				return;
+			}
+		}
+	}
+	
 	private void updateAliens() {
 		for (AlienShip a : aliens) {
-			
+			a.setX(a.getX()-1);
+			if (a.getX() <= 0) {
+				root.getChildren().remove(a);
+				aliens.remove(a);
+				return;
+			}
+			if (myShip.getY()>a.getY()) {
+				a.setY(a.getY()+0.5);
+				continue;
+			}
+			else if (myShip.getY()<a.getY())
+				a.setY(a.getY()-0.5);
 		}
 	}
 	
