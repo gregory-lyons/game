@@ -15,11 +15,11 @@ public class GameHandler implements EventHandler<KeyEvent> {
     public void handle(KeyEvent keyEvent) {
     	
     	if (keyEvent.getCode() == KeyCode.UP) {
-    		game.moveUp();
+    		//game.moveUp();
     	}
     	
         if (keyEvent.getCode() == KeyCode.DOWN) {
-            game.moveDown();
+           // game.moveDown();
         }
 
         if (keyEvent.getCode() == KeyCode.SPACE) {

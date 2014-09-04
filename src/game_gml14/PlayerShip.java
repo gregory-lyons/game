@@ -13,4 +13,17 @@ public class PlayerShip extends Rectangle{
 		this.setFill(Color.RED);
 	}
 	
+	public void moveUp(){
+		if (this.getY()<10) {
+			this.setY(470);
+		}
+		else this.setY(this.getY()-20);
+	}
+	
+	public void moveDown(){
+		if (this.getY()-15>450)
+			this.setY(0);
+		else this.setY(this.getY()+20);
+	}
+	
 }
