@@ -129,11 +129,8 @@ public class GameLoop {
 		aliens = new ArrayList<AlienShip>();
 		alienBullets = new ArrayList<Circle>();
 		root.getChildren().clear();
-		//scene.addEventHandler(KeyEvent.KEY_PRESSED, new KeyPressedHandler(this));
-        //scene.addEventHandler(KeyEvent.KEY_RELEASED, new KeyReleasedHandler(this));
 		timer = 0;
-		//paused = false;
-		myShip = new PlayerShip();
+		myShip = new PlayerShip(1);
 		root.getChildren().add(myShip);
 		resetAmmo();
 		newGame = false;
@@ -141,12 +138,14 @@ public class GameLoop {
 	
 	private void updateLevel1(KeyCode kc){
 		timer++;
-		updateMeteors();
-		updateBullets();
+		updateMeteors(1);
+		if (meteors.size()<=10 && timer%30==0)
+			randomMeteor(1);
+		updateBullets(1);
 		updateAliens();
 		updateAlienBullets();
-		if (timer%120==0)
-			newAlienShip();
+		//if (timer%120==0)
+		//	newAlienShip();
 		if (timer%40==0) {
 			score++;
 			if (scoreText != null) {
@@ -171,12 +170,14 @@ public class GameLoop {
 	
 	private void updateLevel2(KeyCode kc){
 		timer++;
-		updateMeteors();
-		updateBullets();
+		if (meteors.size()<=10 && timer%30==0)
+			randomMeteor(-1);
+		updateMeteors(-1);
+		updateBullets(-1);
 		updateAliens();
 		updateAlienBullets();
-		if (timer%120==0)
-			newAlienShip();
+		//if (timer%120==0)
+		//	newAlienShip();
 		if (timer%40==0) {
 			score++;
 			if (scoreText != null) {
@@ -206,8 +207,8 @@ public class GameLoop {
 	
 	//create random meteors
 	//boolean isBig refers to meteor type: big or small
-	private void randomMeteor(boolean isBig) {
-		Meteor newMeteor = new Meteor(isBig);
+	private void randomMeteor(int i) {
+		Meteor newMeteor = new Meteor(i);
 		root.getChildren().add(newMeteor);
 		meteors.add(newMeteor);
 	}
@@ -235,10 +236,10 @@ public class GameLoop {
 		alienBullets.add(alienBullet);
 	}
 	
-	private void updateMeteors () {
+	private void updateMeteors(int i) {
 		for (Meteor m: meteors) {
-			m.setCenterX(m.getCenterX()-m.getSpeed());
-			if (m.getCenterX() <= -90 || m.getRadius()<=5) {
+			m.setCenterX(m.getCenterX()-i*m.getSpeed());
+			if (m.getCenterX() <= -90 || m.getCenterX() >= 830 || m.getRadius()<=5) {
 				root.getChildren().remove(m);
 				meteors.remove(m);
 				return;
@@ -246,10 +247,10 @@ public class GameLoop {
 		}
 	}
 	
-	private void updateBullets() {
+	private void updateBullets(int i) {
 		for (Circle b : bullets) {
-			b.setCenterX(b.getCenterX()+10);
-			if (b.getCenterX() >= 800) {
+			b.setCenterX(b.getCenterX()+i*10);
+			if (b.getCenterX() >= 800 || b.getCenterX() <= 0) {
 				root.getChildren().remove(b);
 				bullets.remove(b);
 				return;
@@ -295,7 +296,7 @@ public class GameLoop {
 		bullets.clear();
 		alienBullets.clear();
 		aliens.clear();
-		myShip = new PlayerShip();
+		myShip = new PlayerShip(-1);
 		root.getChildren().add(myShip);
 		timer = 0;
 		score = 0;

@@ -8,12 +8,12 @@ public class Meteor extends Circle {
 	
 	private double speed;
 	
-	public Meteor(boolean isBig) {
+	public Meteor(int i) {
 
-		this.setCenterX(820);
+		this.setCenterX(420*i+400);  //820 for level 1, -20 for level 2
 		this.setCenterY(Math.random()*500);
 		
-		if (isBig){
+		if (i == 1){
 
 			this.setRadius(Math.random()*50+30);
 			this.setFill(Color.BROWN);

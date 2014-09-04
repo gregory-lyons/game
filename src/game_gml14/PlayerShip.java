@@ -5,8 +5,8 @@ import javafx.scene.shape.Rectangle;
 
 public class PlayerShip extends Rectangle{
 
-	public PlayerShip(){
-		this.setX(30);
+	public PlayerShip(int i){
+		this.setX(-355*i+385); //30 for level 1, 740 for level 2?
 		this.setY(250);
 		this.setHeight(30);
 		this.setWidth(30);
