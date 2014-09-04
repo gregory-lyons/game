@@ -10,7 +10,7 @@ public class AlienShip extends Rectangle{
 
 	public AlienShip(){
 		this.setX(820);
-		this.setY(250);
+		this.setY(Math.random()*500);
 		this.setHeight(60);
 		this.setWidth(60);
 		this.setFill(Color.GREEN);

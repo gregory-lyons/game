@@ -7,6 +7,7 @@ import javafx.event.ActionEvent;
 import javafx.event.EventHandler;
 import javafx.scene.Group;
 import javafx.scene.Scene;
+import javafx.scene.image.ImageView;
 import javafx.scene.input.KeyEvent;
 import javafx.scene.paint.Color;
 import javafx.scene.shape.Circle;
@@ -24,12 +25,14 @@ public class GameLoop {
 	private ArrayList<Circle> bullets;
 	private ArrayList<AlienShip> aliens;
 	private ArrayList<Circle> alienBullets;
+	private ImageView imageView;
 	private Scene scene;
-	private Scene scene2;
 	private int timer;
 	private int score;
 	private ArrayList<Rectangle> ammo;
 	private Text scoreText;
+	private Text pauseText1;
+	private Text pauseText2;
 	private boolean paused;
 	private boolean newGame;
 	private boolean level2;
@@ -38,16 +41,16 @@ public class GameLoop {
     private EventHandler<ActionEvent> oneFrame = new EventHandler<ActionEvent>() {
 		@Override
 		public void handle(ActionEvent evt) {
-			if (!newGame && !level2) {
+			if (!newGame && !level2 && !paused) {
 			timer++;
 			updateMeteors();
 			updateBullets();
 			updateAliens();
 			updateAlienBullets();
-			//if (meteors.size()<=10 && timer%30==0)
-			//	randomMeteor(false);
+			if (meteors.size()<=10 && timer%30==0)
+				randomMeteor(true);
 			
-			if (timer%400==0) {
+			if (timer%120==0) {
 				newAlienShip();
 			}
 	
@@ -95,10 +98,7 @@ public class GameLoop {
 	public Scene init (Stage s, int width, int height) {
 		root = new Group();
 		scene = new Scene(root, width, height, Color.BLACK);
-		scene.addEventHandler(KeyEvent.KEY_PRESSED, new KeyPressedHandler(this));
-		/*Rectangle startGameBox = new Rectangle(150, 250, 500, 100);
-		startGameBox.setFill(Color.YELLOW);
-		root.getChildren().add(startGameBox);*/
+		scene.addEventHandler(KeyEvent.KEY_PRESSED, new GameHandler(this));
 		Text title = new Text(160, 100, "VOYAGE TO VENUS");
 		title.setFont(Font.font("Arial Rounded MT Bold", 50));
 		title.setFill(Color.YELLOW);
@@ -110,6 +110,30 @@ public class GameLoop {
 		newGame = true;
 		level2 = false;
 		return scene;
+	}
+	
+	public void nextImage() {
+		
+	}
+	
+	public void pause() {
+		paused = true;
+		pauseText1 = new Text(230, 150, "PAUSED");
+		pauseText1.setFont(Font.font("Arial Rounded MT Bold", 80));
+		pauseText1.setFill(Color.WHITE);
+		root.getChildren().add(pauseText1);
+		pauseText2 = new Text(275, 200, "Press [ENTER] to resume");
+		pauseText2.setFont(Font.font("Arial Rounded MT Bold", 20));
+		pauseText2.setFill(Color.WHITE);
+		root.getChildren().add(pauseText2);
+	}
+	
+	public void resume() {
+		paused = false;
+		if (root.getChildren().contains(pauseText1)&&root.getChildren().contains(pauseText2)){
+			root.getChildren().remove(pauseText1);
+			root.getChildren().remove(pauseText2);
+		}
 	}
 	
 	public void startGame() {
@@ -181,6 +205,7 @@ public class GameLoop {
 	}
 	
 	public void moveUp() {
+		if(paused) return;
 		if (myShip.getY()<10) {
 			myShip.setY(470);
 		}
@@ -188,6 +213,7 @@ public class GameLoop {
 	}
 	
 	public void moveDown() {
+		if(paused) return;
 		if (myShip.getY()-15>450)
 			myShip.setY(0);
 		else myShip.setY(myShip.getY()+20);
@@ -210,7 +236,7 @@ public class GameLoop {
 			if (timer%50 == 0) newAlienBullet(a);
 		}
 		for (Circle b : alienBullets) {
-			b.setCenterX(b.getCenterX()-3);
+			b.setCenterX(b.getCenterX()-5);
 			if (b.getCenterX() <= -15) {
 				root.getChildren().remove(b);
 				alienBullets.remove(b);
@@ -221,34 +247,60 @@ public class GameLoop {
 	
 	private void updateAliens() {
 		for (AlienShip a : aliens) {
-			a.setX(a.getX()-1);
+			a.setX(a.getX()-2);
 			if (a.getX() <= 0) {
 				root.getChildren().remove(a);
 				aliens.remove(a);
 				return;
 			}
 			if (myShip.getY()>a.getY()) {
-				a.setY(a.getY()+0.5);
+				a.setY(a.getY()+0.8);
 				continue;
 			}
 			else if (myShip.getY()<a.getY())
-				a.setY(a.getY()-0.5);
+				a.setY(a.getY()-0.8);
 		}
 	}
 	
+	
+	private void resetGame() {
+		root.getChildren().clear();
+		meteors.clear();
+		bullets.clear();
+		alienBullets.clear();
+		aliens.clear();
+		myShip = new PlayerShip();
+		root.getChildren().add(myShip);
+		timer = 0;
+		score = 0;
+		resetAmmo();
+	}
 	private void checkShipCollisions() {
 		for (Meteor m : meteors) {
 			double distance = Math.sqrt(
 								Math.pow(m.getCenterX()-myShip.getX()+15,2)
 								+Math.pow(m.getCenterY()-myShip.getY()-15,2));
 			if (distance < m.getRadius()+15) {
-				root.getChildren().clear();
-				meteors.clear();
-				myShip = new PlayerShip();
-				root.getChildren().add(myShip);
-				timer = 0;
-				score = 0;
-				resetAmmo();
+				resetGame();
+				return;
+			}
+		}
+		for (Circle b : alienBullets) {
+			double distance = Math.sqrt(
+					Math.pow(b.getCenterX()-myShip.getX()+15,2)
+					+Math.pow(b.getCenterY()-myShip.getY()-15,2));
+			if (distance < b.getRadius()+20) {
+				resetGame();
+				return;
+			}
+		}
+		
+		for (AlienShip a : aliens) {
+			double distance = Math.sqrt(
+					Math.pow(a.getX()+30-myShip.getX()+15,2)
+					+Math.pow(a.getY()+30-myShip.getY()-15,2));
+			if (distance < 50) {
+				resetGame();
 				return;
 			}
 		}
@@ -271,9 +323,22 @@ public class GameLoop {
 					root.getChildren().remove(b);
 					bullets.remove(b);
 				return;
+				}
 			}
+			for (AlienShip a : aliens) {
+				double distance = Math.sqrt(
+					Math.pow(a.getX()+30-b.getCenterX(),2)
+					+Math.pow(a.getY()+30-b.getCenterY(),2));
+				if (distance < 30) {
+					root.getChildren().remove(a);
+					aliens.remove(a);
+					root.getChildren().remove(b);
+					bullets.remove(b);
+					return;
+				}	
 			}
 		}
+		
 	}
 	
 	public void resetAmmo() {
