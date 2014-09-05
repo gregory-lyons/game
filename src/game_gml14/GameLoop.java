@@ -19,6 +19,17 @@ import javafx.scene.text.Text;
 import javafx.stage.Stage;
 import javafx.util.Duration;
 
+
+/**
+ * 
+ * 
+ * @author Gregory Lyons (netID: gml14)
+ *
+ *
+ *This game works by managing states and updating based on the states.
+ *The ReadMe and the in-game instructions contain valuable data on how the gameplay works.
+ */
+
 public class GameLoop {
 
 	private Scene scene;
@@ -42,13 +53,14 @@ public class GameLoop {
 	private Text scoreText;
 	private Text pauseText;
 
-	private KeyPressedHandler keyHandler;
-	private KeyReleasedHandler keyHandler2;
+	private KeyPressedHandler keyHandler;  //used for key presses
+	private KeyReleasedHandler keyHandler2;  //used for key releases
 	private KeyCode code;
 
 	private boolean godMode;  //Holding SHIFT key freezes all enemies (but also freezes score)
 
 
+	//handler based on state
 	private EventHandler<ActionEvent> oneFrame = new EventHandler<ActionEvent>() {
 		@Override
 		public void handle(ActionEvent evt) {
@@ -118,6 +130,8 @@ public class GameLoop {
 		}
 	};
 
+//=========INITIAL METHODS=====================
+	
 	//Initialize the conditions necessary to run the game
 	public Scene init (Stage s, int width, int height) {
 		root = new Group();
@@ -132,6 +146,7 @@ public class GameLoop {
 		return scene;
 	}
 
+	//set up data structures and other necessary details
 	public void startGame() {
 		meteors = new ArrayList<Meteor>();
 		bullets = new ArrayList<Circle>();
@@ -149,6 +164,10 @@ public class GameLoop {
 		pauseText = new Text(275, 200, "Press [ENTER] to resume");
 		pauseText.setFont(Font.font("Arial Rounded MT Bold", 20));
 		pauseText.setFill(Color.WHITE);
+	}
+	
+	public KeyFrame start () {
+		return new KeyFrame(Duration.millis(1000/60), oneFrame);
 	}
 
 	//Method is accessed by KeyPressedHandler
@@ -170,20 +189,10 @@ public class GameLoop {
 
 	}
 
-	//Pause the game
-	private void pause() {
-		if (!root.getChildren().contains(pauseText))
-			root.getChildren().add(pauseText);
-	}
 
-	//Resume the game
-	private void resume() {
-		root.getChildren().remove(pauseText);
-		state = prevState;
-	}
-
-	//=========UPDATE METHODS==============================
+//=========UPDATE METHODS==================================
 	
+	//main update method run by the handler
 	private void update(KeyCode kc) {
 		timer++;
 		checkKeys(kc);
@@ -194,13 +203,15 @@ public class GameLoop {
 
 		if (!godMode) { //godMode freezes enemies and score
 			updateScore();
+			updateMeteors();
 			if (state == 1) {
-				updateMeteors();
 				if (meteors.size()<=10 && timer%30==0)
 					newMeteor();
 			}
 
 			if (state == -1) {
+				if (meteors.size()<=4 && timer%240==0)
+						newMeteor();
 				updateAliensandAlienBullets();
 				if (timer%120==0)
 					newAlienShip();
@@ -208,6 +219,7 @@ public class GameLoop {
 		}
 	}
 	
+	//updates meteor positions
 	private void updateMeteors() {
 		for (Meteor m: meteors) {
 			m.setCenterX(m.getCenterX()-state*m.getSpeed());
@@ -219,6 +231,7 @@ public class GameLoop {
 		}
 	}
 
+	//updates bullet positions
 	private void updateBullets() {
 		for (Circle b : bullets) {
 			b.setCenterX(b.getCenterX()+state*10);
@@ -230,6 +243,7 @@ public class GameLoop {
 		}
 	}
 
+	//updates aliens and alien bullet positions
 	private void updateAliensandAlienBullets() {
 		for (AlienShip a : aliens) {
 			if (timer%80 == 0) 
@@ -256,8 +270,9 @@ public class GameLoop {
 		}
 	}
 
+	//updates the score
 	private void updateScore(){
-		if (timer%15==0) {
+		if (timer%25==0) {
 			score++;
 			if (scoreText != null) {
 				root.getChildren().remove(scoreText);
@@ -267,7 +282,26 @@ public class GameLoop {
 			root.getChildren().add(scoreText);
 		}
 	}
+	
+	//updates the background stars' movement
+	private void updateStars() {
+		if (timer%15==0){
+			Circle newStar = new Circle(400*state+400, Math.random()*500, 2, Color.WHITE);
+			newStar.setOpacity(0.5);
+			starList.add(newStar);
+			root.getChildren().add(newStar);
+		}
+		for (Circle s : starList) {
+			s.setCenterX(s.getCenterX()-8*state);
+			if (s.getCenterX()>820 || s.getCenterX()<-20) {
+				starList.remove(s);
+				root.getChildren().remove(s);
+				return;
+			}
+		}
+	}
 
+	//works with key-handler to deal with key presses
 	private void checkKeys(KeyCode k) {
 		if (k == KeyCode.UP)
 			myShip.moveUp();
@@ -278,20 +312,12 @@ public class GameLoop {
 		if (k == KeyCode.R)
 			resetAmmo();
 		if (k == KeyCode.ESCAPE) {
-			prevState = state;
+			prevState = state;  //save current state before pausing
 			state = 3;
 		}
 	}
 
-	public void setGodMode(boolean b) {
-		godMode = b;
-	}
-
-	public KeyFrame start () {
-		return new KeyFrame(Duration.millis(1000/60), oneFrame);
-	}
-
-	//=========CHECK COLLISIONS===============================
+//=========CHECK COLLISIONS===============================
 
 	//check for objects colliding with the player ship
 	private void checkShipCollisions() {
@@ -358,6 +384,8 @@ public class GameLoop {
 		}
 
 	}
+	
+//=======CREATE NEW OBJECTS==================
 
 	private void newMeteor() {
 		Meteor newMeteor = new Meteor(state);
@@ -389,25 +417,22 @@ public class GameLoop {
 	}
 
 	
-
-	private void updateStars() {
-		if (timer%15==0){
-			Circle newStar = new Circle(400*state+400, Math.random()*500, 2, Color.WHITE);
-			newStar.setOpacity(0.5);
-			starList.add(newStar);
-			root.getChildren().add(newStar);
-		}
-		for (Circle s : starList) {
-			s.setCenterX(s.getCenterX()-8*state);
-			if (s.getCenterX()>820 || s.getCenterX()<-20) {
-				starList.remove(s);
-				root.getChildren().remove(s);
-				return;
-			}
-		}
-	}
-
 	
+//=========CONTROLS========================
+
+	//Pause the game
+	private void pause() {
+		if (!root.getChildren().contains(pauseText))
+			root.getChildren().add(pauseText);
+	}
+	
+	//Resume the game
+	private void resume() {
+		root.getChildren().remove(pauseText);
+		state = prevState;
+	}	
+	
+	//reset ammo capacity
 	public void resetAmmo() {
 		for (Rectangle r : ammo) {
 			root.getChildren().remove(r);
@@ -421,11 +446,18 @@ public class GameLoop {
 		}
 	}
 	
+	//============CHEATS==========================
+	
+	//Direct skip to level 2
 	public void skipLevel() {
 		state = -1;
 		startGame();
 	}
 
+	//Freezes enemies (but also freezes score)
+	public void setGodMode(boolean b) {
+		godMode = b;
+	}
 
 
 

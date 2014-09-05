@@ -21,7 +21,7 @@ public class Meteor extends Circle {
 		}
 		else{
 			this.setRadius(Math.random()*40+20);
-			setSpeed(7);
+			setSpeed(3);
 			this.setFill(Color.BROWN);
 		}
 

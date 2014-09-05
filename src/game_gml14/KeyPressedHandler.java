@@ -14,10 +14,11 @@ public class KeyPressedHandler implements EventHandler<KeyEvent> {
     @Override
     public void handle(KeyEvent keyEvent) {	
     	if (keyEvent.getCode() != null)
-    		game.getKeyCode(keyEvent.getCode());
+    		game.getKeyCode(keyEvent.getCode());   //send keyCode to game
     	
     	if (keyEvent.getCode() == KeyCode.SHIFT)
     		game.setGodMode(true);
+    	
     	if (keyEvent.getCode() == KeyCode.BACK_SLASH) {
     		game.skipLevel();
     	}
