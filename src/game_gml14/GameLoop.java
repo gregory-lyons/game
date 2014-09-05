@@ -370,16 +370,14 @@ public class GameLoop {
 				}
 			}
 			for (AlienShip a : aliens) {
-				double distance = Math.sqrt(
-						Math.pow(a.getX()+30-b.getCenterX(),2)
-						+Math.pow(a.getY()+30-b.getCenterY(),2));
-				if (distance < 30) {
+				if (distance(a.getX()+30,a.getY()+30,b.getCenterX(),b.getCenterY()) < 30) {
 					root.getChildren().remove(a);
 					aliens.remove(a);
 					root.getChildren().remove(b);
 					bullets.remove(b);
 					return;
-				}	
+				}
+
 			}
 		}
 
