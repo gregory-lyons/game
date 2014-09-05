@@ -10,7 +10,7 @@ public class PlayerShip extends Rectangle{
 		this.setY(250);
 		this.setHeight(30);
 		this.setWidth(30);
-		this.setFill(Color.RED);
+		this.setFill(Color.CORNFLOWERBLUE);
 	}
 	
 	public void moveUp(){
