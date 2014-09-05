@@ -20,119 +20,118 @@ import javafx.stage.Stage;
 import javafx.util.Duration;
 
 public class GameLoop {
-	
-	private PlayerShip myShip;
+
+	private Scene scene;
 	private Group root;
+	private ImageView imageView;
+	private PlayerShip myShip;
+
 	private ArrayList<Meteor> meteors;
 	private ArrayList<Circle> bullets;
 	private ArrayList<AlienShip> aliens;
 	private ArrayList<Circle> alienBullets;
 	private ArrayList<Circle> starList;
-	private ImageView imageView;
-	private Scene scene;
+	private ArrayList<Rectangle> ammo;
+
 	private int timer;
 	private int score;
-	private ArrayList<Rectangle> ammo;
+	private int state;   //0 = start, 1 = level 1, -1 = level 2, 2 = mid-level, 3 = pause, 4 = endgame
+	private int prevState; //save the previous state (used for pausing)
+	private int imageState;  //used for switching images in beginning
+
 	private Text scoreText;
-	private Text pauseText2;
+	private Text pauseText;
 
 	private KeyPressedHandler keyHandler;
+	private KeyReleasedHandler keyHandler2;
 	private KeyCode code;
-	private boolean godMode;
-	private int state;   //0 = start, 1 = level 1, -1 = level 2, mid-level = 2, pause = 3, endgame = 4
-	private int prevState; //save the previous state
-	private int imageState;
 
-    private EventHandler<ActionEvent> oneFrame = new EventHandler<ActionEvent>() {
+	private boolean godMode;  //Holding SHIFT key freezes all enemies (but also freezes score)
+
+
+	private EventHandler<ActionEvent> oneFrame = new EventHandler<ActionEvent>() {
 		@Override
 		public void handle(ActionEvent evt) {
+
+			//STATE 0:  PRE-GAME SPLASH SCREENS
 			if(state == 0) {
+
 				if (code == KeyCode.SPACE) {
 					imageState++;
 					if (imageState == 1) {
 						nextImage("images/voyage2.png");
-						code = null;
 					}
 					if (imageState == 2)
 						nextImage("images/voyage3.png");
 				}
 				if (code == KeyCode.ENTER) {
-					state = 1;
-					startGame();
+					state = 1;  //set state to Level 1
+					startGame(); //begin game
 				}
 			}
+
+
+			//STATE 1: LEVEL 1
 			if (state == 1) {
 				update(code);
-				if (score==40) {
-					state = 2;
+				if (score==162) {
+					state = 2;  //advance to mid-level splash screen
 					nextImage("images/venus.png");
 				}
 			}
+
+			//STATE 2: MID-LEVEL SPLASH SCREEN
+			if (state == 2) {
+				if (code == KeyCode.ENTER) {
+					state = -1;  //advance to level 2
+					startGame();
+				}
+			}
+
+			//STATE -1: LEVEL 2
+			/*NOTE: 
+			 * "-1" is used for the state of Level 2 because it makes it easy to share methods between Levels 1 and 2.
+			 * Using "-1" and "1" for the two game states makes it easy to switch directions
+			 */
 			if (state == -1) {
 				update(code);
-				if (score==40){
-					state = 4;
+				if (score==162){
+					state = 4; //advance to endgame stage
 					nextImage("images/earth.png");
 				}
 			}
-			
-			if (state == 2) {
-				if (code == KeyCode.ENTER) {
-					state = -1;
-					resetGame();
-				}
-			}
-			
+
+
+			//STATE 3: PAUSE SCREEN
 			if (state == 3) {
 				if (code == KeyCode.ENTER) {
 					resume();
 				}
 				else pause();
 			}
+
+			//STATE 4: FINISHED GAME
 			if (state == 4) {
-				
 			}
-			code = null;
+
+			code = null;  //reset keyCode to null to avoid looping the same key
 		}
 	};
 
+	//Initialize the conditions necessary to run the game
 	public Scene init (Stage s, int width, int height) {
-	
 		root = new Group();
 		scene = new Scene(root, width, height, Color.BLACK);
 		keyHandler = new KeyPressedHandler(this);
+		keyHandler2 = new KeyReleasedHandler(this);
 		scene.addEventHandler(KeyEvent.KEY_PRESSED, keyHandler);
+		scene.addEventHandler(KeyEvent.KEY_RELEASED, keyHandler2);
 		state = 0;
 		imageState = 0;
 		nextImage("images/voyage1.png");
 		return scene;
 	}
-	
-	public void getKeyCode(KeyCode k) {
-		code = k;
-	}
-	
-	private void nextImage(String s) {
-		root.getChildren().clear();
-		Image image = new Image(getClass().getResourceAsStream(s));
-		imageView = new ImageView();
-		imageView.setImage(image);
-		imageView.setFitWidth(800);
-		imageView.setFitHeight(500);
-		imageView.setPreserveRatio(true);
-		root.getChildren().add(imageView);
-		
-	}
-	
-	private void pause() {
-		if (!root.getChildren().contains(pauseText2))
-			root.getChildren().add(pauseText2);
-	}
-	
-	private void resume() {
-			root.getChildren().remove(pauseText2);
-			state = prevState;
-	}
+
 	public void startGame() {
 		meteors = new ArrayList<Meteor>();
 		bullets = new ArrayList<Circle>();
@@ -142,93 +141,71 @@ public class GameLoop {
 		starList = new ArrayList<Circle>();
 		root.getChildren().clear();
 		timer = 0;
+		score = 0;
+		godMode = false;
 		myShip = new PlayerShip(state);
 		root.getChildren().add(myShip);
 		resetAmmo();
-		pauseText2 = new Text(275, 200, "Press [ENTER] to resume");
-		pauseText2.setFont(Font.font("Arial Rounded MT Bold", 20));
-		pauseText2.setFill(Color.WHITE);
+		pauseText = new Text(275, 200, "Press [ENTER] to resume");
+		pauseText.setFont(Font.font("Arial Rounded MT Bold", 20));
+		pauseText.setFill(Color.WHITE);
 	}
+
+	//Method is accessed by KeyPressedHandler
+	public void getKeyCode(KeyCode k) {
+		code = k;
+	}
+
+	//Set up the imageView based on a given filepath
+	private void nextImage(String s) {
+		root.getChildren().clear();
+		Image image = new Image(getClass().getResourceAsStream(s));
+		imageView = new ImageView();
+		imageView.setImage(image);
+		imageView.setFitWidth(600);
+		imageView.setFitHeight(500);
+		imageView.setPreserveRatio(true);
+		imageView.setX(100);
+		root.getChildren().add(imageView);
+
+	}
+
+	//Pause the game
+	private void pause() {
+		if (!root.getChildren().contains(pauseText))
+			root.getChildren().add(pauseText);
+	}
+
+	//Resume the game
+	private void resume() {
+		root.getChildren().remove(pauseText);
+		state = prevState;
+	}
+
+	//=========UPDATE METHODS==============================
 	
 	private void update(KeyCode kc) {
 		timer++;
+		checkKeys(kc);
 		updateBullets();
-		updateScore();
 		checkShipCollisions();
 		checkBulletCollisions();
-		checkKeys(kc);
-		if (state == 1) {
-			stars();
-			updateMeteors();
-			if (meteors.size()<=10 && timer%30==0)
-				newMeteor();
-		}
-		if (state == -1) {
-			updateAliensandAlienBullets();
-			if (timer%120==0)
-				newAlienShip();
-		}
-	}
-	
-	private void updateScore(){
-		if (timer%20==0) {
-			score++;
-			if (scoreText != null) {
-				root.getChildren().remove(scoreText);
-			}
-			scoreText = new Text(30,40, String.valueOf(score));
-			scoreText.setFill(Color.WHITE);
-			root.getChildren().add(scoreText);
-		}
-	}
-	
-	private void checkKeys(KeyCode k) {
-		if (k == KeyCode.UP)
-			myShip.moveUp();
-		if (k == KeyCode.DOWN)
-			myShip.moveDown();
-		if (k == KeyCode.SPACE)
-			newBullet();
-		if (k == KeyCode.R)
-			resetAmmo();
-		if (k == KeyCode.ESCAPE) {
-			prevState = state;
-			state = 3;
-		}
-	}
+		updateStars();
 
-	public KeyFrame start () {
-		return new KeyFrame(Duration.millis(1000/60), oneFrame);
-	}
-	
-	
-	private void newMeteor() {
-		Meteor newMeteor = new Meteor(state);
-		root.getChildren().add(newMeteor);
-		meteors.add(newMeteor);
-	}
-	
-	private void newAlienShip(){
-		AlienShip newAlien = new AlienShip();
-		root.getChildren().add(newAlien);
-		aliens.add(newAlien);
-	}
-	
-	private void newBullet() {
-		if (ammo.size()>0) {
-			Rectangle last = ammo.get(ammo.size()-1);
-			root.getChildren().remove(last);
-			ammo.remove(last);
-			Circle newBullet = new Circle(myShip.getX()+30, myShip.getY()+15, 10, Color.YELLOW);
-			bullets.add(newBullet);
-			root.getChildren().add(newBullet);
+		if (!godMode) { //godMode freezes enemies and score
+			updateScore();
+			if (state == 1) {
+				updateMeteors();
+				if (meteors.size()<=10 && timer%30==0)
+					newMeteor();
+			}
+
+			if (state == -1) {
+				updateAliensandAlienBullets();
+				if (timer%120==0)
+					newAlienShip();
+			}
 		}
-	}
-	
-	private void newAlienBullet(AlienShip a){
-		Circle alienBullet = new Circle(a.getX()+30, a.getY()+30, 5, Color.ORANGE);
-		root.getChildren().add(alienBullet);
-		alienBullets.add(alienBullet);
 	}
 	
 	private void updateMeteors() {
@@ -241,7 +218,7 @@ public class GameLoop {
 			}
 		}
 	}
-	
+
 	private void updateBullets() {
 		for (Circle b : bullets) {
 			b.setCenterX(b.getCenterX()+state*10);
@@ -252,7 +229,7 @@ public class GameLoop {
 			}
 		}
 	}
-	
+
 	private void updateAliensandAlienBullets() {
 		for (AlienShip a : aliens) {
 			if (timer%80 == 0) 
@@ -278,89 +255,98 @@ public class GameLoop {
 			}
 		}
 	}
-	
-	private void stars() {
-		if (timer%15==0){
-			Circle newStar = new Circle(420+state*400, Math.random()*500, 2, Color.WHITE);
-			newStar.setOpacity(0.5);
-			starList.add(newStar);
-			root.getChildren().add(newStar);
-		}
-		for (Circle s : starList) {
-			s.setCenterX(s.getCenterX()-8);
-			if (s.getCenterX()<0) {
-				starList.remove(s);
-				root.getChildren().remove(s);
-				return;
+
+	private void updateScore(){
+		if (timer%15==0) {
+			score++;
+			if (scoreText != null) {
+				root.getChildren().remove(scoreText);
 			}
+			scoreText = new Text(30,40, String.valueOf(score));
+			scoreText.setFill(Color.WHITE);
+			root.getChildren().add(scoreText);
 		}
 	}
-	
-	private void resetGame() {
-		root.getChildren().clear();
-		meteors.clear();
-		bullets.clear();
-		alienBullets.clear();
-		aliens.clear();
-		myShip = new PlayerShip(state);
-		root.getChildren().add(myShip);
-		timer = 0;
-		score = 0;
-		resetAmmo();
+
+	private void checkKeys(KeyCode k) {
+		if (k == KeyCode.UP)
+			myShip.moveUp();
+		if (k == KeyCode.DOWN)
+			myShip.moveDown();
+		if (k == KeyCode.SPACE)
+			newBullet();
+		if (k == KeyCode.R)
+			resetAmmo();
+		if (k == KeyCode.ESCAPE) {
+			prevState = state;
+			state = 3;
+		}
 	}
+
+	public void setGodMode(boolean b) {
+		godMode = b;
+	}
+
+	public KeyFrame start () {
+		return new KeyFrame(Duration.millis(1000/60), oneFrame);
+	}
+
+	//=========CHECK COLLISIONS===============================
+
+	//check for objects colliding with the player ship
 	private void checkShipCollisions() {
+		boolean meteorCollision = false;
 		for (Meteor m : meteors) {
-			double distance = Math.sqrt(
-								Math.pow(m.getCenterX()-(myShip.getX()+15),2)
-								+Math.pow(m.getCenterY()-(myShip.getY()+15),2));
-			if (distance < m.getRadius()+15) {
-				resetGame();
-				return;
+			if (distance(m.getCenterX(), m.getCenterY(), myShip.getX()+15, myShip.getY()+15) < m.getRadius()+15) {
+				meteorCollision = true;
 			}
 		}
+		boolean alienBulletCollision = false;
 		for (Circle b : alienBullets) {
-			double distance = Math.sqrt(
-					Math.pow(b.getCenterX()-(myShip.getX()+15),2)
-					+Math.pow(b.getCenterY()-(myShip.getY()+15),2));
-			if (distance < b.getRadius()+20) {
-				resetGame();
-				return;
+			if (distance(b.getCenterX(), b.getCenterY(), myShip.getX()+15, myShip.getY()+15) < b.getRadius()+20) {
+				alienBulletCollision = true;
 			}
 		}
+		boolean alienCollision = false;
 		for (AlienShip a : aliens) {
-			double distance = Math.sqrt(
-					Math.pow(a.getX()+30-(myShip.getX()+15),2)
-					+Math.pow(a.getY()+30-(myShip.getY()+15),2));
-			if (distance < 50) {
-				resetGame();
-				return;
+			if (distance(a.getX()+30, a.getY()+30, myShip.getX()+15, myShip.getY()+15) < 50){
+				alienCollision = true;
 			}
+		}
+		if (meteorCollision || alienBulletCollision || alienCollision) {
+			startGame();
+			return;
 		}
 	}
 	
+	//helper method used for checking collisions
+	private double distance(double x1, double y1, double x2, double y2) {
+		double d = Math.sqrt(Math.pow(x1-x2,2)+Math.pow(y1-y2,2));
+		return d;
+
+	}
+	
+	//check for objects colliding with bullets
 	private void checkBulletCollisions() {
 		for (Circle b : bullets) {
 			for (Meteor m : meteors) {
-				double distance = Math.sqrt(
-					Math.pow(m.getCenterX()-b.getCenterX(),2)
-					+Math.pow(m.getCenterY()-b.getCenterY(),2));
-				if (distance < m.getRadius()+3) {
-					if (m.getRadius()<=40) {
+				if (distance(m.getCenterX(), m.getCenterY(), b.getCenterX(), b.getCenterY()) < m.getRadius()+3) {
+					if (m.getRadius()<=45) {
 						root.getChildren().remove(m);
 						meteors.remove(m);
 					}
 					else {
-						m.setRadius(m.getRadius()-40);
+						m.setRadius(m.getRadius()-40);  //make big meteors smaller
 					}
 					root.getChildren().remove(b);
 					bullets.remove(b);
-				return;
+					return;
 				}
 			}
 			for (AlienShip a : aliens) {
 				double distance = Math.sqrt(
-					Math.pow(a.getX()+30-b.getCenterX(),2)
-					+Math.pow(a.getY()+30-b.getCenterY(),2));
+						Math.pow(a.getX()+30-b.getCenterX(),2)
+						+Math.pow(a.getY()+30-b.getCenterY(),2));
 				if (distance < 30) {
 					root.getChildren().remove(a);
 					aliens.remove(a);
@@ -370,8 +356,57 @@ public class GameLoop {
 				}	
 			}
 		}
-		
+
 	}
+
+	private void newMeteor() {
+		Meteor newMeteor = new Meteor(state);
+		root.getChildren().add(newMeteor);
+		meteors.add(newMeteor);
+	}
+
+	private void newAlienShip(){
+		AlienShip newAlien = new AlienShip();
+		root.getChildren().add(newAlien);
+		aliens.add(newAlien);
+	}
+
+	private void newBullet() {
+		if (ammo.size()>0) {
+			Rectangle last = ammo.get(ammo.size()-1);
+			root.getChildren().remove(last);
+			ammo.remove(last);
+			Circle newBullet = new Circle(myShip.getX()+30, myShip.getY()+15, 10, Color.YELLOW);
+			bullets.add(newBullet);
+			root.getChildren().add(newBullet);
+		}
+	}
+
+	private void newAlienBullet(AlienShip a){
+		Circle alienBullet = new Circle(a.getX()+30, a.getY()+30, 5, Color.ORANGE);
+		root.getChildren().add(alienBullet);
+		alienBullets.add(alienBullet);
+	}
+
+	
+
+	private void updateStars() {
+		if (timer%15==0){
+			Circle newStar = new Circle(400*state+400, Math.random()*500, 2, Color.WHITE);
+			newStar.setOpacity(0.5);
+			starList.add(newStar);
+			root.getChildren().add(newStar);
+		}
+		for (Circle s : starList) {
+			s.setCenterX(s.getCenterX()-8*state);
+			if (s.getCenterX()>820 || s.getCenterX()<-20) {
+				starList.remove(s);
+				root.getChildren().remove(s);
+				return;
+			}
+		}
+	}
+
 	
 	public void resetAmmo() {
 		for (Rectangle r : ammo) {
@@ -385,5 +420,13 @@ public class GameLoop {
 			root.getChildren().add(newRect);
 		}
 	}
+	
+	public void skipLevel() {
+		state = -1;
+		startGame();
+	}
+
+
+
 
 }
