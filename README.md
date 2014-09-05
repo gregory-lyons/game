@@ -16,11 +16,15 @@ After you reach Venus, you will begin the return journey home (Level 2).  If the
 
 [CONTROLS]
 
-[UP] and [DOWN]……………………………………………Move spaceship
-[SPACE]…………………………………………………………………Fire laser cannon
-[R]…………………………………………………………………………Reload laser cannon (5 shots per reload)
-[ESC]……………………………………………………………………Pause
-[ENTER]…………………………………………………………………Resume from pause
+[UP] and [DOWN]……Move spaceship
+
+[SPACE]…………………Fire laser cannon
+
+[R]…………………Reload laser cannon (5 shots per reload)
+
+[ESC]………………………Pause
+
+[ENTER]……………Resume from pause
 
 
 Goal: To make two safe trips: from Earth to Venus (Level 1), and then from Venus back to Earth (Level 2).
