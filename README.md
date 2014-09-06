@@ -5,7 +5,7 @@ Student Name: Greg Lyons
 
 netID: gml14
 
-Project: Game
+Project: Game (approx. 20 hours?)
 
 Game Name: Voyage to Venus
 
@@ -35,9 +35,13 @@ The game is implemented with a series of states, progressing from the opening sp
 
 Levels: The first level (Earth to Venus) features a meteor shower - a heavy barrage of obstacles to avoid.  The second level (Venus to Earth) features fewer meteors but introduces alien spaceships that move up and down with the player and shoot projectiles straight ahead.
 
+The main class for running the game is Voyage.java.
+
+Image files for the game are included in the src package.
+
 Cheat keys:
 - Holding [SHIFT] triggers God Mode, which freezes all obstacles on the screen.  However it also freezes the mile counter.
-- Pressing [\] (backslash) jumps immediately to gameplay for level 2
+- Pressing [BACKSLASH] jumps immediately to gameplay for level 2
 
 
 *NOTE: Many of the in-game values for things like speed, timing, size, etc. may seem arbitrary, but they have been carefully tested to ensure the best gameplay experience.  Small tweaks that improve gameplay are better than sticking to a rigid system of numbering.  Some of the methods use math based on the state, which helps with the directional switch between the first and second level.
