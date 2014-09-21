@@ -38,9 +38,9 @@ public class GameLoop {
 	private PlayerShip myShip;
 
 	private ArrayList<Meteor> meteors;
-	private ArrayList<Circle> bullets;
+	private ArrayList<Bullet> bullets;
 	private ArrayList<AlienShip> aliens;
-	private ArrayList<Circle> alienBullets;
+	private ArrayList<Bullet> alienBullets;
 	private ArrayList<Circle> starList;
 	private ArrayList<Rectangle> ammo;
 
@@ -149,10 +149,10 @@ public class GameLoop {
 	//set up data structures and other necessary details
 	public void startGame() {
 		meteors = new ArrayList<Meteor>();
-		bullets = new ArrayList<Circle>();
+		bullets = new ArrayList<Bullet>();
 		ammo = new ArrayList<Rectangle>();
 		aliens = new ArrayList<AlienShip>();
-		alienBullets = new ArrayList<Circle>();
+		alienBullets = new ArrayList<Bullet>();
 		starList = new ArrayList<Circle>();
 		root.getChildren().clear();
 		timer = 0;
@@ -195,9 +195,11 @@ public class GameLoop {
 	//main update method run by the handler
 	private void update(KeyCode kc) {
 		timer++;
+		myShip.updateHitbox();
 		checkKeys(kc);
 		updateBullets();
-		checkShipCollisions();
+		if (checkShipCollisions())
+			startGame();
 		checkBulletCollisions();
 		updateStars();
 
@@ -223,6 +225,7 @@ public class GameLoop {
 	private void updateMeteors() {
 		for (Meteor m: meteors) {
 			m.setCenterX(m.getCenterX()-state*m.getSpeed());
+			m.updateHitbox();
 			if (m.getCenterX() <= -90 || m.getCenterX() >= 830 || m.getRadius()<=5) {
 				root.getChildren().remove(m);
 				meteors.remove(m);
@@ -233,7 +236,8 @@ public class GameLoop {
 
 	//updates bullet positions
 	private void updateBullets() {
-		for (Circle b : bullets) {
+		for (Bullet b : bullets) {
+			b.updateHitbox();
 			b.setCenterX(b.getCenterX()+state*10);
 			if (b.getCenterX() >= 800 || b.getCenterX() <= 0) {
 				root.getChildren().remove(b);
@@ -246,6 +250,7 @@ public class GameLoop {
 	//updates aliens and alien bullet positions
 	private void updateAliensandAlienBullets() {
 		for (AlienShip a : aliens) {
+			a.updateHitbox();
 			if (timer%80 == 0) 
 				newAlienBullet(a);
 			a.setX(a.getX()+2);
@@ -260,7 +265,8 @@ public class GameLoop {
 			else if (myShip.getY()<a.getY())
 				a.setY(a.getY()-0.8);
 		}
-		for (Circle b : alienBullets) {
+		for (Bullet b : alienBullets) {
+			b.updateHitbox();
 			b.setCenterX(b.getCenterX()+5);
 			if (b.getCenterX() >= 800) {
 				root.getChildren().remove(b);
@@ -320,43 +326,30 @@ public class GameLoop {
 //=========CHECK COLLISIONS===============================
 
 	//check for objects colliding with the player ship
-	private void checkShipCollisions() {
-		boolean meteorCollision = false;
+	private boolean checkShipCollisions() {
 		for (Meteor m : meteors) {
-			if (distance(m.getCenterX(), m.getCenterY(), myShip.getX()+15, myShip.getY()+15) < m.getRadius()+15) {
-				meteorCollision = true;
+			if (myShip.getHitbox().getCollision(m.getHitbox())){
+				return true;
 			}
 		}
-		boolean alienBulletCollision = false;
-		for (Circle b : alienBullets) {
-			if (distance(b.getCenterX(), b.getCenterY(), myShip.getX()+15, myShip.getY()+15) < b.getRadius()+20) {
-				alienBulletCollision = true;
+		for (Bullet b : alienBullets) {
+			if (myShip.getHitbox().getCollision(b.getHitbox())){
+				return true;
 			}
 		}
-		boolean alienCollision = false;
 		for (AlienShip a : aliens) {
-			if (distance(a.getX()+30, a.getY()+30, myShip.getX()+15, myShip.getY()+15) < 50){
-				alienCollision = true;
+			if (myShip.getHitbox().getCollision(a.getHitbox())){
+				return true;
 			}
 		}
-		if (meteorCollision || alienBulletCollision || alienCollision) {
-			startGame();
-			return;
-		}
+		return false;
 	}
-	
-	//helper method used for checking collisions
-	private double distance(double x1, double y1, double x2, double y2) {
-		double d = Math.sqrt(Math.pow(x1-x2,2)+Math.pow(y1-y2,2));
-		return d;
 
-	}
-	
 	//check for objects colliding with bullets
 	private void checkBulletCollisions() {
-		for (Circle b : bullets) {
+		for (Bullet b : bullets) {
 			for (Meteor m : meteors) {
-				if (distance(m.getCenterX(), m.getCenterY(), b.getCenterX(), b.getCenterY()) < m.getRadius()+3) {
+				if (b.getHitbox().getCollision(m.getHitbox())) {
 					if (m.getRadius()<=45) {
 						root.getChildren().remove(m);
 						meteors.remove(m);
@@ -370,7 +363,7 @@ public class GameLoop {
 				}
 			}
 			for (AlienShip a : aliens) {
-				if (distance(a.getX()+30,a.getY()+30,b.getCenterX(),b.getCenterY()) < 30) {
+				if (b.getHitbox().getCollision(a.getHitbox())) {
 					root.getChildren().remove(a);
 					aliens.remove(a);
 					root.getChildren().remove(b);
@@ -402,14 +395,14 @@ public class GameLoop {
 			Rectangle last = ammo.get(ammo.size()-1);
 			root.getChildren().remove(last);
 			ammo.remove(last);
-			Circle newBullet = new Circle(myShip.getX()+30, myShip.getY()+15, 10, Color.YELLOW);
+			Bullet newBullet = new Bullet(myShip.getX()+30, myShip.getY()+15, 10, Color.YELLOW);
 			bullets.add(newBullet);
 			root.getChildren().add(newBullet);
 		}
 	}
 
 	private void newAlienBullet(AlienShip a){
-		Circle alienBullet = new Circle(a.getX()+30, a.getY()+30, 5, Color.ORANGE);
+		Bullet alienBullet = new Bullet(a.getX()+30, a.getY()+30, 5, Color.ORANGE);
 		root.getChildren().add(alienBullet);
 		alienBullets.add(alienBullet);
 	}
